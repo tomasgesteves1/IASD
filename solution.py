@@ -8,41 +8,57 @@ class BAProblem:
         self.N = None
 
     def load(self, fh):
-        """Carrega o problema BAP a partir de um ficheiro"""
+        """Carrega o problema BAP a partir de um ficheiro de entrada com tratamento de exceções"""
         self.matriz = []
         self.S = None
         self.N = None
-        
-        with open(fh, 'r') as arquivo:
-            for linha in arquivo:
-                linha = linha.strip()
 
-                # Ignora linhas que começam com #
-                if linha.startswith("#"):
-                    continue
+        try:
+            with open(fh, 'r') as arquivo:
+                for linha in arquivo:
+                    linha = linha.strip()
 
-                # Verifica se a linha está vazia
-                if linha == "":
-                    print("Terminou a leitura")
-                    break
+                    # Ignora linhas que começam com #
+                    if linha.startswith("#"):
+                        continue
 
-                # Se a linha contém dois inteiros (S e N)
-                numeros = linha.split()
-                if len(numeros) == 2 and self.S is None and self.N is None:
-                    self.S = int(numeros[0])
-                    self.N = int(numeros[1])
-                    print(f"Variáveis S: {self.S} e N: {self.N} foram definidas")
-                    continue
+                    # Verifica se a linha está vazia
+                    if linha == "":
+                        print("Terminou a leitura.")
+                        break
 
-                # Se a linha contém 4 inteiros, armazena-os na matriz
-                if len(numeros) == 4:
-                    self.matriz.append([int(x) for x in numeros])
+                    # Se a linha contém dois inteiros (S e N)
+                    numeros = linha.split()
+                    if len(numeros) == 2 and self.S is None and self.N is None:
+                        try:
+                            self.S = int(numeros[0])
+                            self.N = int(numeros[1])
+                            print(f"Variáveis S: {self.S} e N: {self.N} foram definidas")
+                        except ValueError:
+                            raise ValueError("Erro: A linha contendo S e N não é composta por dois inteiros válidos.")
+                        continue
 
-        # Ajusta o tamanho da matriz para N x 4
-        if len(self.matriz) != self.N:
-            print(f"Atenção: Existe informação em falta sobre os navios")
+                    # Se a linha contém 4 inteiros, armazena-os na matriz
+                    if len(numeros) == 4:
+                        try:
+                            # Converte cada valor da linha em um inteiro
+                            self.matriz.append([int(x) for x in numeros])
+                        except ValueError:
+                            raise ValueError(f"Erro: A linha {linha} contém valores não inteiros.")
 
-        return self.S, self.N, self.matriz
+            # Verifica se o número de navios lido corresponde ao esperado
+            if len(self.matriz) != self.N:
+                raise ValueError(f"Atenção: Existem informações faltantes ou em excesso sobre os navios. Esperado {self.N}, mas encontrado {len(self.matriz)}.")
+
+            return self.S, self.N, self.matriz
+
+        except FileNotFoundError:
+            print(f"Erro: O ficheiro '{fh}' não foi encontrado.")
+            return None
+        except IOError:
+            print(f"Erro: Não foi possível ler o ficheiro '{fh}'.")
+            return None
+
 
     def cost(self, sol):
         """Calcula o custo da solução fornecida"""
