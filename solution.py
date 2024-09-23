@@ -102,6 +102,10 @@ class BAProblem(search.Problem):
             if sol[i][1] + self.matriz[i][2] > self.S:
                 return False
             
+            #Verifica se o barco já chegou à hora de descarregar
+            if sol[i][0] < self.matriz[i][0]:
+                return False
+            
             for j in range(self.matriz[i][2]):
                 a = sol[i][0]
                 b = sol[i][1] + j
