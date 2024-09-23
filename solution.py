@@ -1,7 +1,10 @@
+import search
 import numpy as np
 import ast
+import io
 
-class BAProblem:
+class BAProblem(search.Problem):
+    
     def __init__(self):
         self.matriz = []
         self.S = None
@@ -14,7 +17,7 @@ class BAProblem:
         self.N = None
 
         try:
-            with open(fh, 'r') as arquivo:
+            with fh as arquivo:
                 for linha in arquivo:
                     linha = linha.strip()
 
@@ -24,7 +27,7 @@ class BAProblem:
 
                     # Verifica se a linha está vazia
                     if linha == "":
-                        print("Terminou a leitura.")
+                    
                         break
 
                     # Se a linha contém dois inteiros (S e N)
@@ -33,7 +36,7 @@ class BAProblem:
                         try:
                             self.S = int(numeros[0])
                             self.N = int(numeros[1])
-                            print(f"Variáveis S: {self.S} e N: {self.N} foram definidas")
+                            #print(f"Variáveis S: {self.S} e N: {self.N} foram definidas")
                         except ValueError:
                             raise ValueError("Erro: A linha contendo S e N não é composta por dois inteiros válidos.")
                         continue
@@ -50,25 +53,20 @@ class BAProblem:
             if len(self.matriz) != self.N:
                 raise ValueError(f"Atenção: Existem informações faltantes ou em excesso sobre os navios. Esperado {self.N}, mas encontrado {len(self.matriz)}.")
 
-            return self.S, self.N, self.matriz
+            return
 
         except FileNotFoundError:
-            print(f"Erro: O ficheiro '{fh}' não foi encontrado.")
+            #print(f"Erro: O ficheiro '{fh}' não foi encontrado.")
             return None
         except IOError:
-            print(f"Erro: Não foi possível ler o ficheiro '{fh}'.")
+            #print(f"Erro: Não foi possível ler o ficheiro '{fh}'.")
             return None
 
 
     def cost(self, sol):
         """Calcula o custo da solução fornecida"""
-        with open(sol, 'r') as f:
-            # Ler o conteúdo do ficheiro
-            linha = f.readline().strip()
-            # Usar ast.literal_eval para converter a string da linha em uma lista de tuplas
-            lista = ast.literal_eval(linha)
         
-        n_vessels = len(lista)
+        lista = sol
         
         final_cost = 0
         
@@ -79,63 +77,42 @@ class BAProblem:
 
     def check(self, sol):
         """Verifica se a solução fornecida é viável"""
-        with open(sol, 'r') as f:
-            linha = f.readline().strip()
-            lista = ast.literal_eval(linha)
 
         # Inicializa max_val e max_idx
-        max_val = 0
-        max_idx = 0
 
-        # Encontra o maior valor e o índice correspondente
-        for i in range(len(lista)):
-            if lista[i][0] > max_val:
-                max_val = lista[i][0]
-                max_idx = i
+        max_processing = 0
+            
+        for linha in self.matriz:
+            if linha[1] > max_processing:
+                max_processing = linha[1]
 
-        aux = max_val + self.matriz[max_idx][1] + 1
 
+        max_arriving = 0
+        for i in range(len(sol)):
+            if sol[i][0] > max_arriving:
+                max_arriving = sol[i][0]
+                
         # Cria a matriz de ocupação do cais (berth occupation)
-        berth_occupation = np.zeros((self.S, aux), dtype=int)
+        berth_occupation = np.zeros(( max_arriving + max_processing, self.S), dtype=int)
 
         # Verifica e preenche a matriz de ocupação do cais
-        for i in range(len(lista)):
+        for i in range(len(sol)):
             
-            if lista[i][1] + self.matriz[i][2] > self.S:
+            #Verifica se o barco cabe no cais
+            if sol[i][1] + self.matriz[i][2] > self.S:
                 return False
             
-            for j in range(self.matriz[i][1]):
-                a = lista[i][0]
-                b = lista[i][1] + j
-                if a < self.S and b < aux:  # Verifica se os índices são válidos
-                    berth_occupation[a][b] += 1
-        
-        print("Matriz de ocupação inicial:")
-        print(berth_occupation)
+            for j in range(self.matriz[i][2]):
+                a = sol[i][0]
+                b = sol[i][1] + j
+                
+                for k in range(self.matriz[i][1]):
+                    c = a + k
+                    berth_occupation[c][b] += 1
+
         # Verifica se algum cais está ocupado por mais de um navio ao mesmo tempo
         for linha in berth_occupation:
             if np.any(linha > 1):  # Verifica se há valores maiores que 1
                 return False
         
         return True
-
-# Função principal
-def main():
-    problem = BAProblem()
-
-    fh = 'test.dat'
-    S, N, matriz = problem.load(fh)
-    
-    print("Matriz lida:")
-    for linha in matriz:
-        print(linha)
-        
-    sol = 'sol.dat'
-    custo = problem.cost(sol)
-    print(f"Custo final: {custo}")
-    
-    valid = problem.check(sol)
-    print(f"RESULTADO: {valid}")
-
-if __name__ == '__main__':
-    main()
