@@ -1,5 +1,6 @@
 import search
 import numpy as np
+import os
 
 class BAProblem(search.Problem):
     
@@ -36,7 +37,6 @@ class BAProblem(search.Problem):
                 self.vessels = np.vstack((self.vessels, new_row))  
 
         return
-
 
     def cost(self, sol):
         """Calcula o custo da solução fornecida"""
@@ -83,3 +83,96 @@ class BAProblem(search.Problem):
 
         return True
     
+    def result(self, state, action):
+        """
+        Retorna o novo estado após aplicar a ação dada no estado atual.
+        A ação pode ser moorar um navio em um tempo e local específico.
+        """
+        # Implement how the action (mooring a vessel) transforms the state
+        pass
+    
+    def actions(self, state):
+        """
+        Retorna a lista de ações possíveis para os navios que ainda não foram atracados.
+        Gera combinações de tempo de atracação e seção do cais.
+        O tempo de atracação é limitado a um valor máximo baseado no tempo de chegada e processamento.
+        """
+        actions = []
+        
+        # Definir o tempo máximo como o maior tempo de chegada + maior tempo de processamento
+        max_arrival = max(self.vessels[:, 0])  # Maior tempo de chegada
+        max_processing = max(self.vessels[:, 1])  # Maior tempo de processamento
+        max_time = max_arrival + max_processing  # Tempo máximo permitido
+
+        for i in range(self.N):  # Para cada navio
+            if state[i] is None:  # Se o navio ainda não foi atracado
+                ai, pi, si, wi = self.vessels[i]  # Dados do navio
+
+                # Verificar tempos de atracação válidos a partir do tempo de chegada (ai)
+                # Limitando até o max_time
+                for mooring_time in range(ai, max_time + 1):  # Gera tempos de atracação válidos >= ai e <= max_time
+                    # Verificar seções do cais onde o navio pode ser alocado
+                    for berth_section in range(self.S - si + 1):  # Verifica se o navio cabe
+                        actions.append((i, mooring_time, berth_section))
+
+        return actions
+
+
+    def goal_test(self, state):
+        """
+        Retorna True se o estado fornecido é um estado de objetivo,
+        ou seja, se todos os navios foram alocados e moorados corretamente.
+        """
+        # Check if all vessels have been moored without conflicts
+        pass
+
+    def path_cost(self, c, state1, action, state2):
+        """
+        Retorna o custo do caminho que leva de state1 a state2 após aplicar a ação.
+        O custo é o total weighted flow time.
+        """
+        # Calculate the updated path cost (weighted flow time)
+        pass
+    
+    def solve(self):
+        """
+        Chama o algoritmo de busca não-informado escolhido.
+        Retorna uma solução na forma de uma lista de tuplas (ui, vi).
+        """
+        # Use one of the uninformed search algorithms to find the optimal solution
+        pass
+
+
+if __name__ == "__main__":
+    # Define o caminho para a pasta onde os arquivos .dat estão
+    folder_path = "test_data/assign2"
+
+    # Pega todos os arquivos .dat na pasta e os ordena
+    for file_name in sorted(os.listdir(folder_path)):
+        if file_name.endswith(".dat"):  # Apenas arquivos .dat
+            file_path = os.path.join(folder_path, file_name)
+            print(f"\nCarregando arquivo: {file_name}")
+
+            # Criar instância da classe BAProblem
+            problem = BAProblem()
+
+            # Abrir e carregar o arquivo de teste
+            with open(file_path, 'r') as f:
+                problem.load(f)
+
+            # Estado inicial (todos os navios ainda não atracados)
+            initial_state = [None] * problem.N
+
+            # Testar o método actions
+            actions_possiveis = problem.actions(initial_state)
+
+            # Criar o nome do arquivo de saída (mesmo nome do arquivo de entrada, mas com extensão .out)
+            output_file_name = file_name.replace(".dat", ".out")
+            output_file_path = os.path.join(folder_path, output_file_name)
+
+            # Salvar as ações no arquivo de saída
+            with open(output_file_path, 'w') as out_file:
+                for action in actions_possiveis:
+                    out_file.write(f"{action}\n")
+
+            print(f"Ações possíveis salvas em: {output_file_name}")
