@@ -86,31 +86,42 @@ class BAProblem(search.Problem):
 
     def actions(self, state):
         """
-        Retorna a lista de ações possíveis para os navios que ainda não foram atracados.
-        Gera combinações de tempo de atracação e seção do cais.
-        O tempo de atracação é limitado a um valor máximo baseado no tempo de chegada e processamento.
+        Retorna a lista de ações possíveis para os navios que ainda não foram atracados,
+        verificando diretamente no state se o espaço está disponível.
         """
-        if self.vessels.size == 0:  # Verifica corretamente se a lista de navios está vazia
-            raise ValueError("Erro: A lista de navios (vessels) está vazia.")
-        
         actions = []
         
         # Definir o tempo máximo como o maior tempo de chegada + maior tempo de processamento
-        max_arrival = max([vessel[0] for vessel in self.vessels])  # Tempo de chegada
-        max_processing = max([vessel[1] for vessel in self.vessels])  # Tempo de processamento
+        max_arrival = max(self.vessels[:, 0])  # Maior tempo de chegada
+        max_processing = max(self.vessels[:, 1])  # Maior tempo de processamento
         max_time = max_arrival + max_processing  # Tempo máximo permitido
 
-        # Iterar sobre cada navio (índice inteiro)
+        # Gerar ações possíveis para os navios que ainda não foram atracados
         for i in range(self.N):
-            if state[i] == ():  # Verificar se o navio ainda não foi atracado
-                ai, pi, si, wi = self.vessels[i]
+            if state[i] == ():  # Se o navio ainda não foi atracado
+                ai, pi, si, wi = self.vessels[i]  # Dados do navio
+
                 # Gerar tempos de atracação válidos a partir do tempo de chegada (ai)
-                for mooring_time in range(ai, max_time + 1):
-                    # Verificar seções do cais onde o navio pode ser alocado
-                    for berth_section in range(self.S - si + 1):
-                        actions.append((i, mooring_time, berth_section))
+                for mooring_time in range(ai, max_time + 1):  
+                    for berth_section in range(self.S - si + 1):  # Verifica se o navio cabe no cais
+                        # Verificar se esta posição já está ocupada no state
+                        is_valid = True
+                        for j in range(self.N):
+                            if state[j] != ():  # Verifica se este navio já foi atracado
+                                other_time, other_section = state[j]
+                                # Verifica se há sobreposição
+                                if not (
+                                    (mooring_time + pi <= other_time or other_time + self.vessels[j][1] <= mooring_time) or
+                                    (berth_section + si <= other_section or other_section + self.vessels[j][2] <= berth_section)
+                                ):
+                                    is_valid = False
+                                    break
+                        
+                        if is_valid:
+                            actions.append((i, mooring_time, berth_section))
 
         return actions
+
 
     def goal_test(self, state):
         """

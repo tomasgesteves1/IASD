@@ -193,17 +193,17 @@ def test_solve():
         print(f"Erro no teste! Solução esperada: {expected_solution}, Solução encontrada: {solution}")
 
 def test_solve_simple():
-    """Testa o método solve da classe BAProblem com um exemplo simples de 2 navios e 3 seções."""
+    """Testa o método solve da classe BAProblem para um exemplo simples."""
     
     # Criar instância da classe BAProblem
     problem = BAProblem()
     
-    # Definir um problema simples diretamente
-    problem.S = 3  # Número de seções do cais
+    # Definir o estado inicial manualmente para o exemplo simples com 2 navios
+    problem.S = 2  # Número de seções
     problem.N = 2  # Número de navios
-    problem.vessels = np.array([[0, 2, 1, 1],  # [chegada, processamento, tamanho, peso] para o navio 1
-                                [1, 1, 1, 1]]) # [chegada, processamento, tamanho, peso] para o navio 2
-    problem.initial = tuple([()] * problem.N)  # Estado inicial deve ser tuplos vazios
+    problem.vessels = np.array([[0, 4, 1, 1],  # (chegada, tempo de processamento, tamanho, peso)
+                                [1, 2, 2, 1]])  # Navio 2
+    problem.initial = tuple([() for _ in range(problem.N)])  # Estado inicial com tuplos vazios
 
     # Verificar se o estado inicial foi corretamente definido
     if problem.initial is not None:
@@ -221,14 +221,18 @@ def test_solve_simple():
     else:
         print("Nenhuma solução foi encontrada.")
 
-    # Solução esperada calculada manualmente
-    expected_solution = [(0, 0), (1, 1)]
+    # Verificação de consistência da solução
+    expected_solution = [(0, 0), (1, 1)]  # Exemplo simples com 2 navios
+
+    # Converter a solução encontrada para lista de tuplas
+    solution_list = list(solution)
 
     # Verifica se a solução encontrada corresponde à solução esperada
-    if solution == expected_solution:
+    if solution_list == expected_solution:
         print("Teste bem-sucedido! A solução encontrada é a esperada.")
     else:
-        print(f"Erro no teste! Solução esperada: {expected_solution}, Solução encontrada: {solution}")
+        print(f"Erro no teste! Solução esperada: {expected_solution}, Solução encontrada: {solution_list}")
+
 
 if __name__ == "__main__":
     # Chamar os testes isoladamente
