@@ -86,10 +86,19 @@ class BAProblem(search.Problem):
     def result(self, state, action):
         """
         Retorna o novo estado após aplicar a ação dada no estado atual.
-        A ação pode ser moorar um navio em um tempo e local específico.
+        A ação é atracar um navio específico num tempo e local específicos.
         """
-        # Implement how the action (mooring a vessel) transforms the state
-        pass
+        # Fazer uma cópia do estado atual para não modificar o original
+        new_state = state.copy()
+        
+        # Desempacotar a ação (i, mooring_time, berth_section)
+        i, mooring_time, berth_section = action
+        
+        # Atualizar o estado do navio i com a nova ação (tempo e seção de atracação)
+        new_state[i] = (mooring_time, berth_section)
+        
+        # Retornar o novo estado
+        return new_state
     
     def actions(self, state):
         """
@@ -117,62 +126,58 @@ class BAProblem(search.Problem):
 
         return actions
 
-
     def goal_test(self, state):
         """
         Retorna True se o estado fornecido é um estado de objetivo,
-        ou seja, se todos os navios foram alocados e moorados corretamente.
+        ou seja, se todos os navios foram alocados e ancorados corretamente.
         """
-        # Check if all vessels have been moored without conflicts
-        pass
+        # Verifica se algum navio ainda está como None (não atracado)
+        for navio in state:
+            if navio is None:
+                return False
+        return True
 
     def path_cost(self, c, state1, action, state2):
         """
         Retorna o custo do caminho que leva de state1 a state2 após aplicar a ação.
         O custo é o total weighted flow time.
         """
-        # Calculate the updated path cost (weighted flow time)
-        pass
+        # Desempacotar a ação (i, mooring_time, berth_section)
+        i, mooring_time, berth_section = action
+
+        # Obter os dados do navio i
+        ai, pi, si, wi = self.vessels[i]
+
+        # Calcular o tempo de partida do navio i (c_i = u_i + p_i)
+        ci = mooring_time + pi
+
+        # Calcular o flow time (f_i = c_i - a_i)
+        fi = ci - ai
+
+        # Calcular o flow time ponderado (w_i * f_i)
+        weighted_flow_time = wi * fi
+
+        # Retornar o custo atualizado (custo anterior + flow time ponderado)
+        return c + weighted_flow_time
+
     
-    def solve(self):
-        """
-        Chama o algoritmo de busca não-informado escolhido.
-        Retorna uma solução na forma de uma lista de tuplas (ui, vi).
-        """
-        # Use one of the uninformed search algorithms to find the optimal solution
-        pass
+def solve(self):
+    """
+    Chama o algoritmo de busca de custo uniforme (Uniform Cost Search) para resolver o problema.
+    Retorna a solução na forma de uma lista de tuplas (ui, vi).
+    """
+    # Estado inicial (todos os navios ainda não atracados)
+    initial_state = [None] * self.N
 
+    # Definir o problema de busca, usando a classe Problem do módulo search
+    problem = search.Problem(initial_state, self.goal_test, self.actions, self.result, self.path_cost)
 
-if __name__ == "__main__":
-    # Define o caminho para a pasta onde os arquivos .dat estão
-    folder_path = "test_data/assign2"
+    # Usar busca de custo uniforme para resolver o problema
+    solution = search.uniform_cost_search(problem)
 
-    # Pega todos os arquivos .dat na pasta e os ordena
-    for file_name in sorted(os.listdir(folder_path)):
-        if file_name.endswith(".dat"):  # Apenas arquivos .dat
-            file_path = os.path.join(folder_path, file_name)
-            print(f"\nCarregando arquivo: {file_name}")
-
-            # Criar instância da classe BAProblem
-            problem = BAProblem()
-
-            # Abrir e carregar o arquivo de teste
-            with open(file_path, 'r') as f:
-                problem.load(f)
-
-            # Estado inicial (todos os navios ainda não atracados)
-            initial_state = [None] * problem.N
-
-            # Testar o método actions
-            actions_possiveis = problem.actions(initial_state)
-
-            # Criar o nome do arquivo de saída (mesmo nome do arquivo de entrada, mas com extensão .out)
-            output_file_name = file_name.replace(".dat", ".out")
-            output_file_path = os.path.join(folder_path, output_file_name)
-
-            # Salvar as ações no arquivo de saída
-            with open(output_file_path, 'w') as out_file:
-                for action in actions_possiveis:
-                    out_file.write(f"{action}\n")
-
-            print(f"Ações possíveis salvas em: {output_file_name}")
+    # A solução retorna uma sequência de ações. Precisamos transformar isso num formato de lista de tuplas (ui, vi)
+    if solution is not None:
+        final_state = solution.state  # O estado final da solução
+        return final_state  # Este é o formato correto [(u0, v0), (u1, v1), ...]
+    else:
+        return None  # Se não encontrar solução
