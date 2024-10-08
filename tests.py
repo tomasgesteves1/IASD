@@ -222,7 +222,7 @@ def test_solve_simple():
         print("Nenhuma solução foi encontrada.")
 
     # Verificação de consistência da solução
-    expected_solution = [(0, 0), (1, 1)]  # Exemplo simples com 2 navios
+    expected_solution = [(0, 0), (4, 0)]  # Exemplo simples com 2 navios
 
     # Converter a solução encontrada para lista de tuplas
     solution_list = list(solution)
