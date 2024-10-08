@@ -201,7 +201,7 @@ def test_solve_simple():
     # Definir o estado inicial manualmente para o exemplo simples com 2 navios
     problem.S = 2  # Número de seções
     problem.N = 2  # Número de navios
-    problem.vessels = np.array([[0, 4, 1, 1],  # (chegada, tempo de processamento, tamanho, peso)
+    problem.vessels = np.array([[0, 4, 3, 1],  # (chegada, tempo de processamento, tamanho, peso)
                                 [1, 2, 2, 1]])  # Navio 2
     problem.initial = tuple([() for _ in range(problem.N)])  # Estado inicial com tuplos vazios
 

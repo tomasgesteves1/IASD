@@ -80,8 +80,6 @@ class BAProblem(search.Problem):
         # Retornar o novo estado como tuplo
         new_state_tuple = tuple(new_state)
         
-        print(f"Ação aplicada: {action}")
-        print(f"Novo estado após ação: {new_state_tuple}")  # Verificação do novo estado
         return new_state_tuple
 
     def actions(self, state):
@@ -89,6 +87,7 @@ class BAProblem(search.Problem):
         Retorna a lista de ações possíveis para os navios que ainda não foram atracados,
         verificando diretamente no state se o espaço está disponível.
         """
+
         actions = []
         
         # Definir o tempo máximo como o maior tempo de chegada + maior tempo de processamento
@@ -119,9 +118,8 @@ class BAProblem(search.Problem):
                         
                         if is_valid:
                             actions.append((i, mooring_time, berth_section))
-
+        print(f"Ações possíveis geradas: {actions}")  # Verificação das ações
         return actions
-
 
     def goal_test(self, state):
         """
