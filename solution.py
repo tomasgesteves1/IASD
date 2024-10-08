@@ -160,24 +160,22 @@ class BAProblem(search.Problem):
         # Retornar o custo atualizado (custo anterior + flow time ponderado)
         return c + weighted_flow_time
 
-    
-def solve(self):
-    """
-    Chama o algoritmo de busca de custo uniforme (Uniform Cost Search) para resolver o problema.
-    Retorna a solução na forma de uma lista de tuplas (ui, vi).
-    """
-    # Estado inicial (todos os navios ainda não atracados)
-    initial_state = [None] * self.N
+    def solve(self):
+        """
+        Chama o algoritmo de busca de custo uniforme (Uniform Cost Search) para resolver o problema.
+        Retorna a solução na forma de uma lista de tuplas (ui, vi).
+        """
+        # Estado inicial: todos os navios ainda não atracados
+        initial_state = [None] * self.N
 
-    # Definir o problema de busca, usando a classe Problem do módulo search
-    problem = search.Problem(initial_state, self.goal_test, self.actions, self.result, self.path_cost)
+        # Criar uma instância do problema, passando o estado inicial e, opcionalmente, o goal
+        problem = search.Problem(initial_state)
 
-    # Usar busca de custo uniforme para resolver o problema
-    solution = search.uniform_cost_search(problem)
+        # Usar a busca de custo uniforme para encontrar a solução
+        solution_node = search.uniform_cost_search(problem)
 
-    # A solução retorna uma sequência de ações. Precisamos transformar isso num formato de lista de tuplas (ui, vi)
-    if solution is not None:
-        final_state = solution.state  # O estado final da solução
-        return final_state  # Este é o formato correto [(u0, v0), (u1, v1), ...]
-    else:
-        return None  # Se não encontrar solução
+        # Verificar se a solução foi encontrada
+        if solution_node is not None:
+            return solution_node.state  # O estado final contém a alocação dos navios
+        else:
+            return None  # Caso não encontre solução

@@ -120,6 +120,41 @@ def test_path_cost():
     new_cost3 = problem.path_cost(new_cost2, new_state2, action3, new_state3)
     print(f"Custo após atracar o navio 2: {new_cost3}")
 
+def test_solve():
+    """Testa o método solve da classe BAProblem para verificar se encontra a solução ótima"""
+    # Criar instância da classe BAProblem com um exemplo fictício
+    problem = BAProblem()
+    problem.N = 3  # Número de navios
+    problem.S = 5  # Tamanho do cais (número de seções)
+    
+    # Definir os navios com: chegada, tempo de processamento, tamanho, peso
+    problem.vessels = [
+        [0, 3, 2, 2],  # Navio 0: chega no tempo 0, processo 3, tamanho 2, peso 2
+        [2, 2, 1, 1],  # Navio 1: chega no tempo 2, processo 2, tamanho 1, peso 1
+        [4, 1, 1, 3],  # Navio 2: chega no tempo 4, processo 1, tamanho 1, peso 3
+    ]
+
+    # Resolver o problema
+    solution = problem.solve()
+
+    # Mostrar a solução encontrada
+    if solution is not None:
+        print(f"\nSolução encontrada: {solution}")
+    else:
+        print("Nenhuma solução foi encontrada.")
+
+    # Verificação de consistência da solução
+    # Solução esperada:
+    # - Navio 0: atracado no tempo 0, seção 0
+    # - Navio 1: atracado no tempo 2, seção 2
+    # - Navio 2: atracado no tempo 5, seção 3
+    expected_solution = [(0, 0), (2, 2), (5, 3)]
+
+    # Verifica se a solução encontrada corresponde à solução esperada
+    if solution == expected_solution:
+        print("Teste bem-sucedido! A solução encontrada é a esperada.")
+    else:
+        print(f"Erro no teste! Solução esperada: {expected_solution}, Solução encontrada: {solution}")
 
 if __name__ == "__main__":
     # Chamar os testes isoladamente
@@ -128,4 +163,5 @@ if __name__ == "__main__":
     # test_actions(folder_path)
     # test_result()
     # test_goal_test()
-    test_path_cost()
+    # test_path_cost()
+    test_solve()
