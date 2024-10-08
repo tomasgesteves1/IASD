@@ -1,5 +1,39 @@
 import os
 from solution import BAProblem
+import numpy as np
+
+def test_load():
+    """Testa o método load da classe BAProblem para verificar se os dados são carregados corretamente a partir de um ficheiro real."""
+    
+    # Criar instância da classe BAProblem
+    problem = BAProblem()
+    
+    # Definir o caminho do ficheiro de entrada
+    file_path = "test_data/assign2/ey100.dat"
+    
+    # Carregar os dados dos navios a partir do ficheiro real
+    with open(file_path, 'r') as file:
+        problem.load(file)
+
+    # Verificar se o estado inicial foi corretamente definido
+    if problem.initial is not None:
+        print(f"Estado inicial corretamente definido: {problem.initial}")
+    else:
+        print("Erro: O estado inicial não foi definido corretamente.")
+
+    # Verificar se os dados dos navios foram corretamente carregados
+    print(f"Vessels: {problem.vessels}")
+    expected_vessels = np.array([
+        [1, 1, 4, 1],
+        [0, 2, 2, 1],
+        [2, 4, 2, 1],
+        [2, 4, 2, 1]
+    ])
+    
+    if np.array_equal(problem.vessels, expected_vessels):
+        print("Os dados dos navios foram carregados corretamente.")
+    else:
+        print(f"Erro ao carregar os dados dos navios. Vessels esperado: {expected_vessels}, Vessels carregado: {problem.vessels}")
 
 def test_actions(folder_path):
     """Testa o método actions da classe BAProblem para todos os arquivos .dat e salva as ações possíveis."""
@@ -121,34 +155,74 @@ def test_path_cost():
     print(f"Custo após atracar o navio 2: {new_cost3}")
 
 def test_solve():
-    """Testa o método solve da classe BAProblem para verificar se encontra a solução ótima"""
-    # Criar instância da classe BAProblem com um exemplo fictício
-    problem = BAProblem()
-    problem.N = 3  # Número de navios
-    problem.S = 5  # Tamanho do cais (número de seções)
+    """Testa o método solve da classe BAProblem para verificar se encontra a solução ótima."""
     
-    # Definir os navios com: chegada, tempo de processamento, tamanho, peso
-    problem.vessels = [
-        [0, 3, 2, 2],  # Navio 0: chega no tempo 0, processo 3, tamanho 2, peso 2
-        [2, 2, 1, 1],  # Navio 1: chega no tempo 2, processo 2, tamanho 1, peso 1
-        [4, 1, 1, 3],  # Navio 2: chega no tempo 4, processo 1, tamanho 1, peso 3
-    ]
+    # Criar instância da classe BAProblem
+    problem = BAProblem()
+    
+    # Definir o caminho do ficheiro de entrada
+    file_path = "test_data/assign2/ey100.dat"
+    
+    # Carregar os dados dos navios a partir do ficheiro real
+    with open(file_path, 'r') as file:
+        problem.load(file)
 
+    # Verificar se o estado inicial foi corretamente definido
+    if problem.initial is not None:
+        print(f"Estado inicial corretamente definido: {problem.initial}")
+    else:
+        print("Erro: O estado inicial não foi definido corretamente.")
+        return
+    
     # Resolver o problema
     solution = problem.solve()
 
     # Mostrar a solução encontrada
     if solution is not None:
-        print(f"\nSolução encontrada: {solution}")
+        print(f"Solução encontrada: {solution}")
     else:
         print("Nenhuma solução foi encontrada.")
 
     # Verificação de consistência da solução
-    # Solução esperada:
-    # - Navio 0: atracado no tempo 0, seção 0
-    # - Navio 1: atracado no tempo 2, seção 2
-    # - Navio 2: atracado no tempo 5, seção 3
     expected_solution = [(0, 0), (2, 2), (5, 3)]
+
+    # Verifica se a solução encontrada corresponde à solução esperada
+    if solution == expected_solution:
+        print("Teste bem-sucedido! A solução encontrada é a esperada.")
+    else:
+        print(f"Erro no teste! Solução esperada: {expected_solution}, Solução encontrada: {solution}")
+
+def test_solve_simple():
+    """Testa o método solve da classe BAProblem com um exemplo simples de 2 navios e 3 seções."""
+    
+    # Criar instância da classe BAProblem
+    problem = BAProblem()
+    
+    # Definir um problema simples diretamente
+    problem.S = 3  # Número de seções do cais
+    problem.N = 2  # Número de navios
+    problem.vessels = np.array([[0, 2, 1, 1],  # [chegada, processamento, tamanho, peso] para o navio 1
+                                [1, 1, 1, 1]]) # [chegada, processamento, tamanho, peso] para o navio 2
+    problem.initial = tuple([()] * problem.N)  # Estado inicial deve ser tuplos vazios
+
+    # Verificar se o estado inicial foi corretamente definido
+    if problem.initial is not None:
+        print(f"Estado inicial corretamente definido: {problem.initial}")
+    else:
+        print("Erro: O estado inicial não foi definido corretamente.")
+        return
+    
+    # Resolver o problema
+    solution = problem.solve()
+
+    # Mostrar a solução encontrada
+    if solution is not None:
+        print(f"Solução encontrada: {solution}")
+    else:
+        print("Nenhuma solução foi encontrada.")
+
+    # Solução esperada calculada manualmente
+    expected_solution = [(0, 0), (1, 1)]
 
     # Verifica se a solução encontrada corresponde à solução esperada
     if solution == expected_solution:
@@ -160,8 +234,10 @@ if __name__ == "__main__":
     # Chamar os testes isoladamente
     folder_path = "test_data/assign2"
     
+    # test_load()
     # test_actions(folder_path)
     # test_result()
     # test_goal_test()
     # test_path_cost()
-    test_solve()
+    # test_solve()
+    test_solve_simple()
