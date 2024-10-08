@@ -61,6 +61,8 @@ class BAProblem(search.Problem):
         Retorna o novo estado após aplicar a ação dada no estado atual.
         A ação é atracar um navio num tempo e seção específicos.
         """
+
+        print(f"Ação aplicada: {action}, Estado anterior: {state}")
         if state is None:
             raise ValueError("Erro: O estado não pode ser None.")
 
@@ -79,6 +81,8 @@ class BAProblem(search.Problem):
         
         # Retornar o novo estado como tuplo
         new_state_tuple = tuple(new_state)
+
+        print(f"Novo estado após ação: {new_state}")
         
         return new_state_tuple
 
@@ -90,36 +94,66 @@ class BAProblem(search.Problem):
 
         actions = []
         
-        # Definir o tempo máximo como o maior tempo de chegada + maior tempo de processamento
-        max_arrival = max(self.vessels[:, 0])  # Maior tempo de chegada
-        max_processing = max(self.vessels[:, 1])  # Maior tempo de processamento
-        max_time = max_arrival + max_processing  # Tempo máximo permitido
-
-        # Gerar ações possíveis para os navios que ainda não foram atracados
+        # Criar uma lista para armazenar os tempos de atracação ocupados para cada seção do cais
+        berth_occupation = [0] * self.S  # Inicializa com 0, indicando que o cais está livre no tempo 0
+        
+        # Atualiza a ocupação do cais com base nos navios já atracados no estado atual
+        for i in range(self.N):
+            if state[i] != ():  # Se o navio já foi atracado
+                mooring_time, berth_section = state[i]
+                pi = self.vessels[i][1]  # Tempo de processamento
+                si = self.vessels[i][2]  # Tamanho do navio
+                # Marcar as seções ocupadas durante o tempo de processamento do navio
+                for sec in range(berth_section, berth_section + si):
+                    berth_occupation[sec] = max(berth_occupation[sec], mooring_time + pi)
+        
+        # Gerar ações para os navios que ainda não foram atracados
         for i in range(self.N):
             if state[i] == ():  # Se o navio ainda não foi atracado
                 ai, pi, si, wi = self.vessels[i]  # Dados do navio
-
-                # Gerar tempos de atracação válidos a partir do tempo de chegada (ai)
-                for mooring_time in range(ai, max_time + 1):  
-                    for berth_section in range(self.S - si + 1):  # Verifica se o navio cabe no cais
-                        # Verificar se esta posição já está ocupada no state
-                        is_valid = True
-                        for j in range(self.N):
-                            if state[j] != ():  # Verifica se este navio já foi atracado
-                                other_time, other_section = state[j]
-                                # Verifica se há sobreposição
-                                if not (
-                                    (mooring_time + pi <= other_time or other_time + self.vessels[j][1] <= mooring_time) or
-                                    (berth_section + si <= other_section or other_section + self.vessels[j][2] <= berth_section)
-                                ):
-                                    is_valid = False
-                                    break
-                        
-                        if is_valid:
-                            actions.append((i, mooring_time, berth_section))
-        print(f"Ações possíveis geradas: {actions}")  # Verificação das ações
+                
+                # Verificar o tempo de chegada 'ai' ou o próximo tempo livre disponível no cais
+                for berth_section in range(self.S - si + 1):  # Verifica se o navio cabe no cais
+                    next_available_time = max(ai, max(berth_occupation[sec] for sec in range(berth_section, berth_section + si)))
+                    
+                    # Se for possível atracar neste tempo, adicionar a ação
+                    if next_available_time >= ai:
+                        actions.append((i, next_available_time, berth_section))
+        
+        # print(f"Ações possíveis geradas: {actions}")  # Verificação das ações
         return actions
+        # actions = []
+        
+        # # Definir o tempo máximo como o maior tempo de chegada + maior tempo de processamento
+        # max_arrival = max(self.vessels[:, 0])  # Maior tempo de chegada
+        # max_processing = max(self.vessels[:, 1])  # Maior tempo de processamento
+        # max_time = max_arrival + max_processing  # Tempo máximo permitido
+
+        # # Gerar ações possíveis para os navios que ainda não foram atracados
+        # for i in range(self.N):
+        #     if state[i] == ():  # Se o navio ainda não foi atracado
+        #         ai, pi, si, wi = self.vessels[i]  # Dados do navio
+
+        #         # Gerar tempos de atracação válidos a partir do tempo de chegada (ai)
+        #         for mooring_time in range(ai, max_time + 1):  
+        #             for berth_section in range(self.S - si + 1):  # Verifica se o navio cabe no cais
+        #                 # Verificar se esta posição já está ocupada no state
+        #                 is_valid = True
+        #                 for j in range(self.N):
+        #                     if state[j] != ():  # Verifica se este navio já foi atracado
+        #                         other_time, other_section = state[j]
+        #                         # Verifica se há sobreposição
+        #                         if not (
+        #                             (mooring_time + pi <= other_time or other_time + self.vessels[j][1] <= mooring_time) or
+        #                             (berth_section + si <= other_section or other_section + self.vessels[j][2] <= berth_section)
+        #                         ):
+        #                             is_valid = False
+        #                             break
+                        
+        #                 if is_valid:
+        #                     actions.append((i, mooring_time, berth_section))
+        # print(f"Ações possíveis geradas: {actions}")  # Verificação das ações
+        # return actions
 
     def goal_test(self, state):
         """
@@ -130,6 +164,7 @@ class BAProblem(search.Problem):
             return False  # Se o estado for None, não é um estado de objetivo
 
         # Verifica se todos os elementos do estado são válidos (não estão vazios)
+        # print(f"Estado de teste: {state}")  # Verificação do estado
         return all(vessel != () for vessel in state)
 
     def path_cost(self, c, state1, action, state2):
@@ -150,15 +185,15 @@ class BAProblem(search.Problem):
             raise ValueError("O estado inicial não foi definido corretamente.")
         
         # Verificar o conteúdo do estado inicial antes de iniciar a busca
-        print(f"Estado inicial utilizado no solve: {self.initial}")  # Verificação de debug
+        # print(f"Estado inicial utilizado no solve: {self.initial}")  # Verificação de debug
 
         # Usar Uniform Cost Search passando `self` como o problema
         solution_node = search.uniform_cost_search(self, True)
 
         if solution_node is not None:
-            print(f"Solução encontrada: {solution_node.state}")  # Verificação do estado final
-            print(f"Número de nós expandidos: {solution_node}")
+            # print(f"Solução encontrada: {solution_node.state}")  # Verificação do estado final
+            # print(f"Número de nós expandidos: {solution_node}")
             return solution_node.state  # Retorna o estado final (solução)
         else:
-            print("Nenhuma solução foi encontrada.")
+            # print("Nenhuma solução foi encontrada.")
             return None

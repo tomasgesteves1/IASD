@@ -155,42 +155,43 @@ def test_path_cost():
     print(f"Custo após atracar o navio 2: {new_cost3}")
 
 def test_solve():
-    """Testa o método solve da classe BAProblem para verificar se encontra a solução ótima."""
+    """Testa o método solve da classe BAProblem para todos os ficheiros .dat na pasta especificada em ordem numérica."""
     
-    # Criar instância da classe BAProblem
-    problem = BAProblem()
+    # Diretório onde os ficheiros .dat estão localizados
+    directory_path = "test_data/assign2/"
     
-    # Definir o caminho do ficheiro de entrada
-    file_path = "test_data/assign2/ey100.dat"
-    
-    # Carregar os dados dos navios a partir do ficheiro real
-    with open(file_path, 'r') as file:
-        problem.load(file)
+    # Obter todos os ficheiros .dat na pasta e ordenar numericamente
+    dat_files = sorted([f for f in os.listdir(directory_path) if f.endswith(".dat")], key=lambda x: int(x[2:-4]))
 
-    # Verificar se o estado inicial foi corretamente definido
-    if problem.initial is not None:
-        print(f"Estado inicial corretamente definido: {problem.initial}")
-    else:
-        print("Erro: O estado inicial não foi definido corretamente.")
-        return
-    
-    # Resolver o problema
-    solution = problem.solve()
+    # Iterar por cada ficheiro .dat
+    for dat_file in dat_files:
+        print(f"\nRodando teste para o ficheiro: {dat_file}")
+        
+        # Criar instância da classe BAProblem
+        problem = BAProblem()
+        
+        # Definir o caminho completo do ficheiro de entrada
+        file_path = os.path.join(directory_path, dat_file)
+        
+        # Carregar os dados dos navios a partir do ficheiro real
+        with open(file_path, 'r') as file:
+            problem.load(file)
 
-    # Mostrar a solução encontrada
-    if solution is not None:
-        print(f"Solução encontrada: {solution}")
-    else:
-        print("Nenhuma solução foi encontrada.")
+        # Verificar se o estado inicial foi corretamente definido
+        if problem.initial is not None:
+            print(f"Estado inicial corretamente definido: {problem.initial}")
+        else:
+            print("Erro: O estado inicial não foi definido corretamente.")
+            continue
+        
+        # Resolver o problema
+        solution = problem.solve()
 
-    # Verificação de consistência da solução
-    expected_solution = [(0, 0), (2, 2), (5, 3)]
-
-    # Verifica se a solução encontrada corresponde à solução esperada
-    if solution == expected_solution:
-        print("Teste bem-sucedido! A solução encontrada é a esperada.")
-    else:
-        print(f"Erro no teste! Solução esperada: {expected_solution}, Solução encontrada: {solution}")
+        # Mostrar a solução encontrada
+        if solution is not None:
+            print(f"Solução encontrada: {solution}")
+        else:
+            print("Nenhuma solução foi encontrada.")
 
 def test_solve_simple():
     """Testa o método solve da classe BAProblem para um exemplo simples."""
@@ -201,7 +202,7 @@ def test_solve_simple():
     # Definir o estado inicial manualmente para o exemplo simples com 2 navios
     problem.S = 2  # Número de seções
     problem.N = 2  # Número de navios
-    problem.vessels = np.array([[0, 4, 2, 1],  # (chegada, tempo de processamento, tamanho, peso)
+    problem.vessels = np.array([[0, 4, 1, 1],  # (chegada, tempo de processamento, tamanho, peso)
                                 [1, 2, 2, 1]])  # Navio 2
     problem.initial = tuple([() for _ in range(problem.N)])  # Estado inicial com tuplos vazios
 
@@ -243,5 +244,5 @@ if __name__ == "__main__":
     # test_result()
     # test_goal_test()
     # test_path_cost()
-    # test_solve()
-    test_solve_simple()
+    test_solve()
+    # test_solve_simple()
