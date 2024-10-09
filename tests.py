@@ -226,7 +226,7 @@ def test_solve_simple():
     expected_solution = [(0, 0), (4, 0)]  # Exemplo simples com 2 navios
 
     # Converter a solução encontrada para lista de tuplas
-    solution_list = list(solution)
+    solution_list = (solution)
 
     # Verifica se a solução encontrada corresponde à solução esperada
     if solution_list == expected_solution:
