@@ -117,7 +117,7 @@ class BAProblem(search.Problem):
     def solve(self):
         """Chama o algoritmo de busca de custo uniforme (Uniform Cost Search) para resolver o problema"""
         # Usar Uniform Cost Search
-        solution_node = search.uniform_cost_search(self)
+        solution_node = search.astar_search(self)
         
         # Verificar se existe solução (se não, retorna None)
         if solution_node is not None:
