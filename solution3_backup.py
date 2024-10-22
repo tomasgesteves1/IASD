@@ -141,7 +141,6 @@ class BAProblem(search.Problem):
         """
         state = node.state
         total_weighted_flow_time = 0
-        remaining_ships = 0
         
         # Inicializa a ocupação do cais (0 = livre no tempo 0)
         berth_occupation = [0] * self.S

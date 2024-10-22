@@ -138,11 +138,14 @@ class BAProblem(search.Problem):
         Função heurística para estimar o tempo de fluxo total ponderado.
         A heurística calcula o tempo de fluxo total estimado para os navios
         que ainda não foram atracados, com base na ocupação atual do cais.
+        Também calcula uma penalidade para o tempo de inatividade do cais
+        e uma penalidade para seções vazias.
         """
         state = node.state
         total_weighted_flow_time = 0
-        remaining_ships = 0
-        
+        idle_time_penalty_weight = 0.075  # Peso da penalidade para o tempo ocioso do cais (ajustável)
+        empty_sections_penalty_weight = 0.1  # Peso da penalidade para seções vazias (ajustável)
+
         # Inicializa a ocupação do cais (0 = livre no tempo 0)
         berth_occupation = [0] * self.S
 
@@ -154,8 +157,11 @@ class BAProblem(search.Problem):
                 si = self.vessels[i][2]  # Tamanho do navio (seções ocupadas)
                 for sec in range(berth_section, berth_section + si):
                     berth_occupation[sec] = max(berth_occupation[sec], mooring_time + pi)
+        
+        # Inicializa o próximo tempo disponível para cada seção do cais
+        next_available_time = berth_occupation[:]
 
-        # Estimar o tempo de fluxo para os navios que ainda não foram atracados
+        # Estimar o tempo de fluxo e o tempo ocioso (penalidade) para os navios que ainda não foram atracados
         for i in range(self.N):
             if state[i] == ():  # Se o navio i ainda não foi atracado
                 ai, pi, si, wi = self.vessels[i]  # Tempo de chegada, tempo de processamento, tamanho, peso
@@ -183,4 +189,17 @@ class BAProblem(search.Problem):
                 # Adiciona o tempo de fluxo ponderado ao total
                 total_weighted_flow_time += wi * fi
 
+                # Calcula a penalidade de tempo ocioso para o cais
+                idle_time_penalty = max(0, next_available_time[v] - earliest_start_time)  # Penalidade pelo tempo ocioso
+                total_weighted_flow_time += idle_time_penalty_weight * idle_time_penalty
+                
+                # Atualiza o tempo disponível para as seções de cais após atracar o navio
+                for sec in range(v, v + si):
+                    next_available_time[sec] = earliest_start_time + pi
+
+        ### Penalidade por Seções Vazias ###
+        empty_sections = berth_occupation.count(0)  # Contar quantas seções estão vazias
+        total_weighted_flow_time += empty_sections_penalty_weight * empty_sections  # Aplicar penalidade
+
         return total_weighted_flow_time
+
